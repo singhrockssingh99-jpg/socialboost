@@ -1,7 +1,68 @@
-import React from 'react';
-import { Facebook, Instagram, Save, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
+import { Facebook, Instagram, Save, AlertTriangle, Loader, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Settings: React.FC = () => {
+  const [fbPageId, setFbPageId] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('fb_page_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116: single row not found
+          throw error;
+        }
+
+        if (data?.fb_page_id) {
+          setFbPageId(data.fb_page_id);
+          setIsConnected(true);
+        }
+      } catch (error) {
+        toast.error('Settings fetch karne mein samasya hui.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettings();
+  }, [user]);
+
+  const handleSaveSettings = async () => {
+    if (!user || !fbPageId) {
+      toast.error('Kripya Facebook Page ID darj karein.');
+      return;
+    }
+    setSaving(true);
+    const saveToast = toast.loading('Settings save ki ja rahi hain...');
+
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert({ user_id: user.id, fb_page_id: fbPageId }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+
+      toast.success('Settings safaltapoorvak save ho gayin!', { id: saveToast });
+      setIsConnected(true);
+    } catch (error: any) {
+      toast.error(`Settings save karne mein samasya hui: ${error.message}`, { id: saveToast });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
       <div>
@@ -19,87 +80,62 @@ const Settings: React.FC = () => {
                   <Facebook size={24} className="text-blue-600" />
                   <h2 className="text-lg font-semibold text-gray-900">Facebook Integration</h2>
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                  <AlertTriangle size={12} />
-                  Connected Nahi Hai
-                </span>
+                {isConnected ? (
+                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                    <CheckCircle size={12} />
+                    Connected
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                    <AlertTriangle size={12} />
+                    Connected Nahi Hai
+                  </span>
+                )}
               </div>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label htmlFor="fb-app-id" className="block text-sm font-medium text-gray-700 mb-1">
-                  App ID
+                <label htmlFor="fb-page-id" className="block text-sm font-medium text-gray-700 mb-1">
+                  Facebook Page ID
                 </label>
                 <input
                   type="text"
-                  id="fb-app-id"
-                  placeholder="Apna Facebook App ID darj karein"
+                  id="fb-page-id"
+                  value={fbPageId}
+                  onChange={(e) => setFbPageId(e.target.value)}
+                  placeholder="Apna Facebook Page ID darj karein"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={loading}
                 />
               </div>
-              <div>
-                <label htmlFor="fb-app-secret" className="block text-sm font-medium text-gray-700 mb-1">
-                  App Secret
-                </label>
-                <input
-                  type="password"
-                  id="fb-app-secret"
-                  placeholder="Apna Facebook App Secret darj karein"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+              <p className="text-xs text-gray-500">
+                Aapko ek Page Access Token bhi set karna hoga. Suraksha ke liye, ise Supabase Dashboard mein Edge Function secret ke roop mein set karein.
+              </p>
             </div>
             <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end">
-              <button className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                <Save size={18} />
+              <button 
+                onClick={handleSaveSettings}
+                disabled={saving || loading}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-blue-400">
+                {saving ? <Loader size={18} className="animate-spin" /> : <Save size={18} />}
                 Facebook Settings Save Karein
               </button>
             </div>
           </div>
 
-          {/* Instagram Integration Card */}
-          <div className="bg-white rounded-xl border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
+          {/* Instagram Integration Card (Placeholder) */}
+          <div className="bg-white rounded-xl border border-gray-200 opacity-60">
+             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Instagram size={24} className="text-pink-600" />
                   <h2 className="text-lg font-semibold text-gray-900">Instagram Integration</h2>
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                  <AlertTriangle size={12} />
-                  Connected Nahi Hai
-                </span>
+                 <span className="text-xs font-medium text-gray-500">Jald hi aa raha hai</span>
               </div>
             </div>
             <div className="p-6 space-y-4">
-              <div>
-                <label htmlFor="ig-app-id" className="block text-sm font-medium text-gray-700 mb-1">
-                  App ID
-                </label>
-                <input
-                  type="text"
-                  id="ig-app-id"
-                  placeholder="Apna Instagram App ID darj karein"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label htmlFor="ig-access-token" className="block text-sm font-medium text-gray-700 mb-1">
-                  Access Token
-                </label>
-                <input
-                  type="password"
-                  id="ig-access-token"
-                  placeholder="Apna Instagram Access Token darj karein"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end">
-              <button className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                <Save size={18} />
-                Instagram Settings Save Karein
-              </button>
+              <p className="text-sm text-gray-500">Instagram integration abhi vikas mein hai.</p>
             </div>
           </div>
         </div>

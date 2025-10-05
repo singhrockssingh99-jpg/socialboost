@@ -1,0 +1,50 @@
+/*
+          # [Operation Name]
+          Create Settings Table
+
+          ## Query Description: [This script creates a new 'settings' table to store user-specific integration settings, such as the Facebook Page ID. It includes Row Level Security (RLS) policies to ensure users can only access their own settings. This is a non-destructive operation.]
+
+          ## Metadata:
+          - Schema-Category: ["Structural"]
+          - Impact-Level: ["Low"]
+          - Requires-Backup: [false]
+          - Reversible: [true]
+
+          ## Structure Details:
+          - Table: public.settings
+          - Columns: id, user_id, created_at, fb_page_id
+
+          ## Security Implications:
+          - RLS Status: [Enabled]
+          - Policy Changes: [Yes]
+          - Auth Requirements: [Users must be authenticated]
+
+          ## Performance Impact:
+          - Indexes: [Primary key and foreign key indexes added]
+          - Triggers: [None]
+          - Estimated Impact: [Low]
+          */
+
+CREATE TABLE public.settings (
+    id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    fb_page_id character varying
+);
+
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own settings"
+ON public.settings
+FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own settings"
+ON public.settings
+FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own settings"
+ON public.settings
+FOR UPDATE
+USING (auth.uid() = user_id);

@@ -1,50 +1,147 @@
-import React from 'react';
-import { TrendingUp, Users, MessageCircle, DollarSign, Calendar, Clock, Target } from 'lucide-react';
-import { faker } from '@faker-js/faker';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
+import { TrendingUp, Users, MessageCircle, DollarSign, Loader, Lightbulb, Award, BarChart, LineChart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import ReactECharts from 'echarts-for-react';
+
+interface Post {
+  id: number;
+  content: string;
+  platform: 'facebook' | 'instagram';
+  engagement_rate?: number;
+  media_url?: string;
+}
 
 const Dashboard: React.FC = () => {
-  const stats = [
-    { label: 'Total Reach', value: '124.5K', change: '+12.5%', icon: TrendingUp, color: 'blue' },
-    { label: 'Active Leads', value: '387', change: '+8.3%', icon: Users, color: 'purple' },
-    { label: 'Baatcheet', value: '156', change: '+23.1%', icon: MessageCircle, color: 'green' },
-    { label: 'Ad Kharch', value: '$2,450', change: '-5.2%', icon: DollarSign, color: 'orange' },
+  const [stats, setStats] = useState({
+    totalReach: '0',
+    activeLeads: 0,
+    conversations: 0,
+    adSpend: 0,
+  });
+  const [topPosts, setTopPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  // Mock data for charts and analysis
+  const performanceChartOptions = {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Reach', 'Engagement', 'Leads'] },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+    },
+    yAxis: { type: 'value' },
+    series: [
+      { name: 'Reach', type: 'line', stack: 'Total', data: [1200, 1320, 1010, 1340, 900, 2300, 2100], smooth: true },
+      { name: 'Engagement', type: 'line', stack: 'Total', data: [220, 182, 191, 234, 290, 330, 310], smooth: true },
+      { name: 'Leads', type: 'line', stack: 'Total', data: [15, 22, 21, 14, 19, 33, 41], smooth: true },
+    ],
+  };
+
+  const adAnalysisChartOptions = {
+    tooltip: { trigger: 'item' },
+    legend: { top: '5%', left: 'center' },
+    series: [
+      {
+        name: 'Ad Performance',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+        label: { show: false, position: 'center' },
+        emphasis: { label: { show: true, fontSize: '20', fontWeight: 'bold' } },
+        labelLine: { show: false },
+        data: [
+          { value: 1048, name: 'Video Ads' },
+          { value: 735, name: 'Image Ads' },
+          { value: 580, name: 'Carousel Ads' },
+          { value: 484, name: 'Story Ads' },
+        ],
+      },
+    ],
+  };
+
+  const adInsights = [
+      { text: "Aapke Video Ads, Image Ads se 42% behtar perform kar rahe hain. Aur video content banayein!", icon: Lightbulb, color: "yellow" },
+      { text: "Mumbai mein 'Tech Enthusiasts' ko target karne wale ads ka CTR sabse zyada hai.", icon: Award, color: "green" },
   ];
 
-  const recentPosts = Array.from({ length: 4 }, (_, i) => ({
-    id: i + 1,
-    content: faker.lorem.sentence(),
-    platform: i % 2 === 0 ? 'facebook' : 'instagram',
-    scheduled: faker.date.future(),
-    status: i === 0 ? 'posted' : 'scheduled',
-  }));
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const [leadsData, adsData, conversationsData] = await Promise.all([
+          supabase.from('leads').select('id', { count: 'exact' }).eq('user_id', user.id).eq('status', 'nurturing'),
+          supabase.from('ads').select('budget').eq('user_id', user.id),
+          supabase.from('conversations').select('id', { count: 'exact' }).eq('user_id', user.id),
+        ]);
 
-  const upcomingPosts = Array.from({ length: 3 }, (_, i) => ({
-    id: i + 1,
-    content: faker.lorem.sentence(),
-    scheduledTime: faker.date.future(),
-    platform: i % 2 === 0 ? 'facebook' : 'instagram',
-  }));
+        if (leadsData.error) throw leadsData.error;
+        if (adsData.error) throw adsData.error;
+        if (conversationsData.error) throw conversationsData.error;
+
+        const totalAdSpend = adsData.data?.reduce((sum, ad) => sum + (ad.budget || 0), 0) || 0;
+
+        setStats({
+          totalReach: '124.5K', // Placeholder
+          activeLeads: leadsData.count || 0,
+          adSpend: totalAdSpend,
+          conversations: conversationsData.count || 0,
+        });
+
+        // Mock top performing posts
+        setTopPosts([
+            { id: 1, content: "Hamara naya summer collection launch ho gaya hai!", platform: "instagram", engagement_rate: 5.8, media_url: "https://img-wrapper.vercel.app/image?url=https://placehold.co/100x100/EED7D7/864646?text=Post1" },
+            { id: 2, content: "Ek special offer sirf aapke liye! Code 'SUMMER25' use karein.", platform: "facebook", engagement_rate: 4.2, media_url: "https://img-wrapper.vercel.app/image?url=https://placehold.co/100x100/D7E8EE/466B86?text=Post2" },
+            { id: 3, content: "Behind the scenes: Hamari team kaam karte hue.", platform: "instagram", engagement_rate: 3.9, media_url: "https://img-wrapper.vercel.app/image?url=https://placehold.co/100x100/D7EEE0/468668?text=Post3" },
+        ]);
+
+      } catch (error) {
+        console.error("Dashboard data fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  const statCards = [
+    { label: 'Total Reach', value: stats.totalReach, icon: TrendingUp, color: 'blue' },
+    { label: 'Active Leads', value: stats.activeLeads.toString(), icon: Users, color: 'purple' },
+    { label: 'Baatcheet', value: stats.conversations.toString(), icon: MessageCircle, color: 'green' },
+    { label: 'Ad Kharch', value: `$${stats.adSpend.toFixed(2)}`, icon: DollarSign, color: 'orange' },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full p-6">
+        <Loader className="animate-spin text-blue-600" size={40} />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Wapas Swagat Hai! Aapke campaigns ka status yahan dekhein.</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+        <p className="text-gray-600 mt-1">Aapke campaigns ka performance aur insights yahan dekhein.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat) => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
-          const isPositive = stat.change.startsWith('+');
           return (
             <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-gray-600 font-medium">{stat.label}</p>
                   <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                  <p className={`text-sm font-medium mt-2 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                    {stat.change} pichhle mahine se
-                  </p>
                 </div>
                 <div className={`w-12 h-12 bg-${stat.color}-100 rounded-lg flex items-center justify-center`}>
                   <Icon size={24} className={`text-${stat.color}-600`} />
@@ -54,56 +151,59 @@ const Dashboard: React.FC = () => {
           );
         })}
       </div>
+      
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <LineChart size={20} />
+          Performance Overview
+        </h2>
+        <ReactECharts option={performanceChartOptions} style={{ height: 300 }} />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Aane Wale Posts</h2>
-            <Calendar size={20} className="text-gray-400" />
-          </div>
-          <div className="space-y-4">
-            {upcomingPosts.map((post) => (
-              <div key={post.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${post.platform === 'facebook' ? 'bg-blue-100' : 'bg-gradient-to-br from-purple-100 to-pink-100'}`}>
-                  <Clock size={18} className={post.platform === 'facebook' ? 'text-blue-600' : 'text-pink-600'} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 font-medium truncate">{post.content}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {post.scheduledTime.toLocaleDateString()} at {post.scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${post.platform === 'facebook' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}`}>
-                  {post.platform}
-                </span>
-              </div>
-            ))}
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <BarChart size={20} />
+            Ad Performance Analysis
+          </h2>
+          <ReactECharts option={adAnalysisChartOptions} style={{ height: 250 }} />
         </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Haal ki Gatividhi</h2>
-            <Target size={20} className="text-gray-400" />
-          </div>
-          <div className="space-y-4">
-            {recentPosts.map((post) => (
-              <div key={post.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${post.status === 'posted' ? 'bg-green-100' : 'bg-yellow-100'}`}>
-                  <div className={`w-2 h-2 rounded-full ${post.status === 'posted' ? 'bg-green-600' : 'bg-yellow-600'}`}></div>
+        <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 h-full">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Mukhya Insights</h2>
+                <div className="space-y-4">
+                    {adInsights.map((insight, index) => {
+                        const Icon = insight.icon;
+                        return (
+                            <div key={index} className={`flex items-start gap-4 p-4 rounded-lg bg-${insight.color}-50 border-l-4 border-${insight.color}-500`}>
+                                <Icon size={24} className={`text-${insight.color}-600 flex-shrink-0 mt-1`} />
+                                <p className="text-sm text-gray-800">{insight.text}</p>
+                            </div>
+                        )
+                    })}
                 </div>
+            </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Posts</h2>
+        <div className="space-y-4">
+            {topPosts.length > 0 ? topPosts.map((post) => (
+              <div key={post.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <img src={post.media_url} alt="Post media" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-900 font-medium truncate">{post.content}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {post.status === 'posted' ? 'Post Ho Gaya' : 'Ke liye scheduled'} {post.scheduled.toLocaleDateString()}
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1 capitalize">{post.platform}</p>
                 </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${post.status === 'posted' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                  {post.status}
-                </span>
+                <div className="text-right">
+                    <p className="text-lg font-bold text-green-600">{post.engagement_rate}%</p>
+                    <p className="text-xs text-gray-500">Engagement</p>
+                </div>
               </div>
-            ))}
-          </div>
+            )) : (
+              <p className="text-center text-gray-500 py-8">Koi post data nahi hai.</p>
+            )}
         </div>
       </div>
     </div>
