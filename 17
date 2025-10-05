@@ -1,0 +1,113 @@
+import React from 'react';
+import { TrendingUp, Users, MessageCircle, DollarSign, Calendar, Clock, Target } from 'lucide-react';
+import { faker } from '@faker-js/faker';
+
+const Dashboard: React.FC = () => {
+  const stats = [
+    { label: 'Total Reach', value: '124.5K', change: '+12.5%', icon: TrendingUp, color: 'blue' },
+    { label: 'Active Leads', value: '387', change: '+8.3%', icon: Users, color: 'purple' },
+    { label: 'Baatcheet', value: '156', change: '+23.1%', icon: MessageCircle, color: 'green' },
+    { label: 'Ad Kharch', value: '$2,450', change: '-5.2%', icon: DollarSign, color: 'orange' },
+  ];
+
+  const recentPosts = Array.from({ length: 4 }, (_, i) => ({
+    id: i + 1,
+    content: faker.lorem.sentence(),
+    platform: i % 2 === 0 ? 'facebook' : 'instagram',
+    scheduled: faker.date.future(),
+    status: i === 0 ? 'posted' : 'scheduled',
+  }));
+
+  const upcomingPosts = Array.from({ length: 3 }, (_, i) => ({
+    id: i + 1,
+    content: faker.lorem.sentence(),
+    scheduledTime: faker.date.future(),
+    platform: i % 2 === 0 ? 'facebook' : 'instagram',
+  }));
+
+  return (
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-1">Wapas Swagat Hai! Aapke campaigns ka status yahan dekhein.</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          const isPositive = stat.change.startsWith('+');
+          return (
+            <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">{stat.label}</p>
+                  <p className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                  <p className={`text-sm font-medium mt-2 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                    {stat.change} pichhle mahine se
+                  </p>
+                </div>
+                <div className={`w-12 h-12 bg-${stat.color}-100 rounded-lg flex items-center justify-center`}>
+                  <Icon size={24} className={`text-${stat.color}-600`} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Aane Wale Posts</h2>
+            <Calendar size={20} className="text-gray-400" />
+          </div>
+          <div className="space-y-4">
+            {upcomingPosts.map((post) => (
+              <div key={post.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${post.platform === 'facebook' ? 'bg-blue-100' : 'bg-gradient-to-br from-purple-100 to-pink-100'}`}>
+                  <Clock size={18} className={post.platform === 'facebook' ? 'text-blue-600' : 'text-pink-600'} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-900 font-medium truncate">{post.content}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {post.scheduledTime.toLocaleDateString()} at {post.scheduledTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${post.platform === 'facebook' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}`}>
+                  {post.platform}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Haal ki Gatividhi</h2>
+            <Target size={20} className="text-gray-400" />
+          </div>
+          <div className="space-y-4">
+            {recentPosts.map((post) => (
+              <div key={post.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${post.status === 'posted' ? 'bg-green-100' : 'bg-yellow-100'}`}>
+                  <div className={`w-2 h-2 rounded-full ${post.status === 'posted' ? 'bg-green-600' : 'bg-yellow-600'}`}></div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-900 font-medium truncate">{post.content}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {post.status === 'posted' ? 'Post Ho Gaya' : 'Ke liye scheduled'} {post.scheduled.toLocaleDateString()}
+                  </p>
+                </div>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${post.status === 'posted' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                  {post.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;

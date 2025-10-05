@@ -1,0 +1,138 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { CheckCircle, BarChart, Users, MessageSquare, Megaphone, Calendar, Image as ImageIcon, Sparkles } from 'lucide-react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import { Link } from 'react-router-dom';
+
+const LandingPage: React.FC = () => {
+  const features = [
+    { icon: Calendar, title: "Post Scheduler", description: "Apne posts pehle se schedule karein aur samay bachayein." },
+    { icon: ImageIcon, title: "Media Library", description: "Apne saare photos aur videos ek jagah manage karein." },
+    { icon: Megaphone, title: "Ads Manager", description: "Marketplace ads banayein aur unki performance track karein." },
+    { icon: MessageSquare, title: "Unified Inbox", description: "Facebook aur Instagram ke saare messages ek jagah dekhein." },
+    { icon: Users, title: "Lead Management", description: "Apne potential customers ko aasani se manage karein." },
+    { icon: BarChart, title: "Analytics", description: "Apne social media growth ko track karein aur samjhein." },
+  ];
+
+  const pricingTiers = [
+    { name: "Free", price: "₹0", features: ["1 Social Account", "10 Scheduled Posts/month", "Basic Analytics"], cta: "Start for Free" },
+    { name: "Pro", price: "₹999", popular: true, features: ["5 Social Accounts", "Unlimited Posts", "Advanced Analytics", "Ads Manager", "Email Support"], cta: "Choose Pro" },
+    { name: "Business", price: "₹2499", features: ["Unlimited Accounts", "Team Collaboration", "Lead Management", "Dedicated Support"], cta: "Contact Us" },
+  ];
+  
+  const faqs = [
+    { q: "SocialBoost kya hai?", a: "SocialBoost ek all-in-one social media management tool hai jo aapko Facebook aur Instagram par content schedule karne, ads manage karne, aur customer conversations handle karne mein madad karta hai." },
+    { q: "Kaun se platforms supported hain?", a: "Abhi hum Facebook aur Instagram ko support karte hain. Hum jald hi aur platforms add karne wale hain!" },
+    { q: "Kya iska free trial hai?", a: "Haan! Aap hamara Free plan istemal karke shuru kar sakte hain, jismein basic features shamil hain." },
+  ];
+
+  return (
+    <div className="bg-white text-gray-800">
+      <Header />
+      <main>
+        {/* Hero Section */}
+        <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 text-center bg-gray-50">
+          <div className="container mx-auto px-4">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <h1 className="text-4xl lg:text-6xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Apne Social Media ko Supercharge Karein
+              </h1>
+              <p className="mt-6 text-lg lg:text-xl max-w-3xl mx-auto text-gray-600">
+                SocialBoost ke saath apne Facebook aur Instagram pages ko manage karna ab hua aasan. Posts schedule karein, ads chalayein, aur apne customers se judein - sab ek hi jagah se.
+              </p>
+              <div className="mt-10 flex justify-center gap-4">
+                <Link to="/signup" className="px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all">
+                  Free Mein Shuru Karein
+                </Link>
+                <Link to="#features" className="px-8 py-4 bg-white text-gray-800 font-semibold rounded-lg border border-gray-300 hover:bg-gray-100 transition-all">
+                  Features Dekhein
+                </Link>
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.3 }} className="mt-16 max-w-5xl mx-auto">
+              <div className="relative rounded-xl shadow-2xl overflow-hidden">
+                <img src="https://i.ibb.co/pP94s0S/dashboard-preview.png" alt="SocialBoost Dashboard" className="w-full" />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-gray-50/50 to-transparent"></div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="py-20 lg:py-24">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-4xl font-bold">Aapke Business Ke Liye Powerful Features</h2>
+              <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Woh sab kuch jo aapko social media par safal hone ke liye chahiye.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {features.map((feature, index) => (
+                <motion.div key={index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: index * 0.1 }} className="bg-gray-50 p-8 rounded-xl hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg mb-6">
+                    <feature.icon className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="py-20 lg:py-24 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-4xl font-bold">Aapke Liye Sahi Plan</h2>
+              <p className="mt-4 text-lg text-gray-600">Simple aur transparent pricing. Koi hidden fees nahi.</p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {pricingTiers.map((tier, index) => (
+                <div key={index} className={`bg-white rounded-xl border ${tier.popular ? 'border-blue-600 shadow-2xl' : 'border-gray-200'} p-8 flex flex-col`}>
+                  {tier.popular && <span className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">Popular</span>}
+                  <h3 className="text-2xl font-semibold mb-2">{tier.name}</h3>
+                  <p className="text-4xl font-bold mb-4">{tier.price}<span className="text-lg font-normal text-gray-500">/month</span></p>
+                  <ul className="space-y-3 text-gray-600 mb-8 flex-grow">
+                    {tier.features.map((feature, fIndex) => (
+                      <li key={fIndex} className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/signup" className={`w-full text-center px-6 py-3 font-semibold rounded-lg transition-all ${tier.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                    {tier.cta}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section id="faq" className="py-20 lg:py-24">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-4xl font-bold">Aksar Puche Jane Wale Sawal</h2>
+            </div>
+            <div className="space-y-4">
+              {faqs.map((faq, index) => (
+                <details key={index} className="p-6 bg-gray-50 rounded-lg group" open={index === 0}>
+                  <summary className="font-semibold cursor-pointer flex justify-between items-center">
+                    {faq.q}
+                    <span className="transform transition-transform duration-300 group-open:rotate-180">▼</span>
+                  </summary>
+                  <p className="mt-4 text-gray-600">{faq.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default LandingPage;

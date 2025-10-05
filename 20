@@ -1,0 +1,139 @@
+import React, { useState } from 'react';
+import { Plus, Target, DollarSign, TrendingUp, Eye, MousePointerClick } from 'lucide-react';
+import { faker } from '@faker-js/faker';
+
+const Ads: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'active' | 'draft' | 'completed'>('active');
+
+  const ads = Array.from({ length: 5 }, (_, i) => ({
+    id: i + 1,
+    name: `${faker.commerce.productAdjective()} ${faker.commerce.product()} Campaign`,
+    platform: i % 2 === 0 ? 'facebook' : 'instagram',
+    budget: (Math.random() * 500 + 100).toFixed(2),
+    spent: (Math.random() * 300 + 50).toFixed(2),
+    impressions: Math.floor(Math.random() * 10000 + 1000),
+    clicks: Math.floor(Math.random() * 500 + 50),
+    status: i < 3 ? 'active' : i === 3 ? 'draft' : 'completed',
+    image: `https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://placehold.co/400x300/e2e8f0/475569?text=Ad+${i + 1}`,
+  }));
+
+  const filteredAds = ads.filter(ad => ad.status === activeTab);
+
+  return (
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Ads Manager</h1>
+          <p className="text-gray-600 mt-1">Apne Facebook & Instagram marketplace ads banayein aur manage karein</p>
+        </div>
+        <button className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+          <Plus size={20} />
+          Ad Banayein
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Kul Kharch', value: `$${ads.reduce((sum, ad) => sum + parseFloat(ad.spent), 0).toFixed(2)}`, icon: DollarSign, color: 'blue' },
+          { label: 'Active Campaigns', value: ads.filter(ad => ad.status === 'active').length.toString(), icon: Target, color: 'green' },
+          { label: 'Kul Impressions', value: `${(ads.reduce((sum, ad) => sum + ad.impressions, 0) / 1000).toFixed(1)}K`, icon: Eye, color: 'purple' },
+          { label: 'Kul Clicks', value: ads.reduce((sum, ad) => sum + ad.clicks, 0).toString(), icon: MousePointerClick, color: 'orange' },
+        ].map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-10 h-10 bg-${stat.color}-100 rounded-lg flex items-center justify-center`}>
+                  <Icon size={20} className={`text-${stat.color}-600`} />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              <p className="text-sm text-gray-600 mt-1">{stat.label}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="border-b border-gray-200 p-4">
+          <div className="flex gap-1">
+            {[
+              { id: 'active', label: 'Active' },
+              { id: 'draft', label: 'Draft' },
+              { id: 'completed', label: 'Poora Hua' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors capitalize ${
+                  activeTab === tab.id
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {filteredAds.map((ad) => {
+            const ctr = ((ad.clicks / ad.impressions) * 100).toFixed(2);
+            return (
+              <div key={ad.id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+                <div className="flex flex-col md:flex-row md:items-start gap-4">
+                  <div className="w-full md:w-32 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <img src={ad.image} alt={ad.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{ad.name}</h3>
+                        <p className="text-sm text-gray-600 mt-1 capitalize">{ad.platform} Marketplace</p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                        ad.status === 'active' ? 'bg-green-100 text-green-700' :
+                        ad.status === 'draft' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {ad.status === 'completed' ? 'Poora Hua' : ad.status}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div>
+                        <p className="text-xs text-gray-600">Budget</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">${ad.budget}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600">Kharch</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">${ad.spent}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600">Impressions</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">{ad.impressions.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600">CTR</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">{ctr}%</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-4">
+                      <button className="text-sm font-medium text-blue-600 hover:text-blue-700">Details Dekhein</button>
+                      <button className="text-sm font-medium text-blue-600 hover:text-blue-700">Edit Karein</button>
+                      {ad.status === 'active' && (
+                        <button className="text-sm font-medium text-red-600 hover:text-red-700">Rokein</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Ads;
